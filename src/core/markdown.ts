@@ -1,10 +1,15 @@
 // markdown-to-jsx の呼び出しを1か所に集約する（DESIGN.md 12章）。
 // ライブラリの解析結果（AST）は、このファイルの中で、このパッケージ用の簡易構造に変換してから外へ渡す。
 // ライブラリを差し替える場合の影響を、このファイルに閉じ込めるため。
-import { type MarkdownToJSX, parser, RuleType } from "markdown-to-jsx/react";
+import { astToJSX, type MarkdownToJSX, parser, RuleType } from "markdown-to-jsx/react";
+import { type ComponentType, createElement, Fragment, type ReactNode } from "react";
+import { createTagPolicy, isAllowedUrl, isComponentName, sanitizeAttributes } from "./sanitize.js";
 import { slugify } from "./slug.js";
 
 type AstNode = MarkdownToJSX.ASTNode;
+
+/** 描画のために、解析済みのmdごとにライブラリのASTを持っておく（ASTの型を外へ出さないため） */
+const asts = new WeakMap<MdDocument, AstNode[]>();
 
 /** 解析済みのmd。本文直下の要素を、出てくる順に並べたもの */
 export interface MdDocument {
@@ -61,8 +66,103 @@ export function parseMarkdown(markdown: string): MdDocument {
     // 独自タグの属性に書かれた式は実行しない（7章）
     evalUnserializableExpressions: false,
   });
-  return { blocks: toBlocks(ast) };
+  const doc: MdDocument = { blocks: toBlocks(ast) };
+  asts.set(doc, ast);
+  return doc;
 }
+
+export interface RenderOptions {
+  /** md内で使える HTML タグの追加（7章） */
+  allowedTags?: readonly string[];
+  /** md内で使える独自タグ（6.1節）。名前が大文字始まりのものだけが有効 */
+  components?: Readonly<Record<string, ComponentType<any>>>;
+}
+
+/**
+ * 解析済みのmdを描画する。安全性の制限（DESIGN.md 7章）は、ここで必ず適用する。
+ * ライブラリの設定（tagfilter など）は、呼び出し側から変えられない。
+ */
+export function renderMarkdown(doc: MdDocument, options: RenderOptions = {}): ReactNode {
+  const components = options.components ?? {};
+  const kindOf = createTagPolicy({
+    allowedTags: options.allowedTags,
+    componentNames: Object.keys(components),
+  });
+  const overrides = Object.fromEntries(
+    Object.entries(components).filter(([name]) => isComponentName(name)),
+  );
+
+  return astToJSX(asts.get(doc) ?? [], {
+    // 危険なタグを文字にするライブラリの保護は、常に有効にする（7章）
+    tagfilter: true,
+    // HTML ブロックを描画時に解析し直す場合にも、同じ見出しIDの規則を使う
+    slugify: (input) => slugify(input),
+    wrapper: null,
+    overrides,
+    renderRule(next, node, renderChildren, state) {
+      switch (node.type) {
+        case RuleType.htmlBlock:
+        case RuleType.htmlSelfClosing: {
+          const kind = kindOf(node.tag);
+          if (kind === "text") return renderTagAsText(node, renderChildren, state);
+          // ライブラリの描画に渡すため、ノードの属性を制限したものに置き換える（何度行っても結果は同じ）
+          if (node.attrs) node.attrs = sanitizeAttributes(node.attrs, kind);
+          return next();
+        }
+        case RuleType.link:
+          // 許可しないURLのリンクは、リンクにせず文字だけを表示する
+          if (node.target === null || !isAllowedUrl(node.target)) {
+            return createElement(Fragment, { key: state.key }, renderChildren(node.children, state));
+          }
+          return next();
+        case RuleType.image:
+          // 許可しないURLの画像は、代替テキストを文字で表示する
+          if (node.target === null || !isAllowedUrl(node.target)) return node.alt ?? "";
+          return next();
+        default:
+          return next();
+      }
+    },
+    createElement: createElementWithoutRawHtml,
+  });
+}
+
+/** 許可していないタグを、タグ名と中身の文字で表示する。属性は表示しない */
+function renderTagAsText(
+  node: MarkdownToJSX.HTMLNode | MarkdownToJSX.HTMLSelfClosingNode,
+  renderChildren: MarkdownToJSX.ASTRender,
+  state: MarkdownToJSX.State,
+): ReactNode {
+  let content: ReactNode = null;
+  if (node.type === RuleType.htmlBlock) {
+    if (node.children && node.children.length > 0) {
+      content = renderChildren(node.children, state);
+    } else if (node.text) {
+      // 中身を解析しないタグ（<pre> など）の中身は、この欄にしかない
+      content = node.text;
+    }
+  }
+  if (content === null) return `<${node.tag} />`;
+  return createElement(Fragment, { key: state.key }, `<${node.tag}>`, content, `</${node.tag}>`);
+}
+
+/**
+ * ライブラリが中身を HTML として直接書き込む場合（<pre> など）も、HTML として解釈させず、
+ * その文字列を文字として表示する
+ */
+const createElementWithoutRawHtml: NonNullable<MarkdownToJSX.Options["createElement"]> = (
+  type,
+  props,
+  ...children
+) => {
+  if (props && "dangerouslySetInnerHTML" in props) {
+    const { dangerouslySetInnerHTML, ...rest } = props as {
+      dangerouslySetInnerHTML?: { __html?: unknown };
+    };
+    return createElement(type, rest, String(dangerouslySetInnerHTML?.__html ?? ""));
+  }
+  return createElement(type, props, ...children);
+};
 
 function toBlocks(nodes: AstNode[]): MdBlock[] {
   const blocks: MdBlock[] = [];
