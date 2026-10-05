@@ -283,6 +283,8 @@ md内に、登録済みのコンポーネントをタグとして書ける。
 
 - タグ名は大文字始まり。`components` に登録した名前だけが有効
 - 文字列の属性は文字列として、`{...}` で書いた配列、オブジェクト、真偽値は解析済みの値としてpropsに渡る
+  - 配列とオブジェクトはJSONとして解析される。オブジェクトのキーは `"` で囲む（`{{"a": 1}}`）。`{{a: 1}}` と書くと文字列のまま渡る
+  - 数値は解析されず、文字列として渡る（`n={3}` は `"3"`）
 - 関数や変数を書いた属性は、実行されず文字列のまま渡る（`evalUnserializableExpressions` は絶対に有効にしない）
 - タグの中身はmdとして描画され、`children` に渡る
 - 登録されていないタグは、描画せず文字として表示する（開発時は警告）
@@ -315,6 +317,8 @@ VS CodeやGitHubのプレビューでも注意書きとして表示されるた�
 
 - 種別は `NOTE`、`TIP`、`IMPORTANT`、`WARNING`、`CAUTION` の5つ
 - `markdown-to-jsx` が引用ブロックのノードに種別（`alert`）を付けるので、それを見て描画する
+  - 種別は大文字に揃えて付く（`[!warning]` も `WARNING`）。`[!XXX]` の行は本文から取り除かれる
+  - ライブラリは5種類に限らず、任意の `[!XXX]` に種別を付ける。5種類への絞り込みはこのパッケージで行う。5種類以外の扱いは未定（13章の手順6で決める）
 - コア層は種別を `data-mhk-alert` 属性として出すだけ。見た目はUI層のCSSが担当する（9.5）
 
 ### 6.4 同梱する部品
@@ -345,9 +349,9 @@ VS CodeやGitHubのプレビューでも注意書きとして表示されるた�
 - **HTMLタグ**: 許可リスト方式。標準で許可するのは `details`、`summary`、`kbd`、`br`、`sub`、`sup`、`mark`。`allowedTags` で追加できる
 - **独自タグ**: `components` に登録したものだけ
 - **それ以外のタグ**: 描画せず、文字として表示する。HTMLブロックと自己終了タグのノードについて、タグ名を見て判定する
-- **属性**: 許可したHTMLタグの `style` は捨てる
-- **URL**: リンクと画像のURLは、`http:`、`https:`、`mailto:`、相対パスのみ許可する（`data:` も不可）
-- **禁止する設定**: `tagfilter: false` と `evalUnserializableExpressions: true` は、利用者が指定できないようにする
+- **属性**: 許可したHTMLタグの `style` は捨てる。mdの表が列の寄せのために `th`、`td` に付ける `style` は対象外（9.5の寄せ指定を保つため）
+- **URL**: リンクと画像のURLは、`http:`、`https:`、`mailto:`、相対パスのみ許可する（`data:` も不可）。ライブラリの `sanitizer` オプションは指定しない（指定すると標準の保護がまるごと置き換わるため。許可リストは `renderRule` で上乗せする）
+- **禁止する設定**: `tagfilter: false` と `evalUnserializableExpressions: true` は、利用者が指定できないようにする（それぞれ効く側で固定する。14章）
 
 これらの制限は `HelpContent` の中で必ず適用し、利用者が誤って外せないようにする。
 テストでは、上記の各項目について「通らないこと」を確認する（10章）。
@@ -508,12 +512,13 @@ example/                Vite製のデモSPA（bundled と remote を切り替え
 ## 14. `markdown-to-jsx` の使い方
 
 2026年10月時点の公式ドキュメント（v9系）で確認済み。
+v9.10.3 の同梱 `llms.txt` と、実際の動作でも確認した（13章の手順1）。
 実装の最初に、パッケージ同梱の `llms.txt`（入口、設定、解析結果の形をまとめた要約）を読み、下記と食い違いがあれば実装前に報告すること。
 
 | やりたいこと | 使う機能 |
 |---|---|
-| 解析結果を取り出す（目次、見出し、検索） | `parser(markdown)`。描画には `astToJSX(ast)` を使い、解析を1回で済ませる |
-| 見出しIDを日本語対応にする | `options.slugify` に自前の関数を渡す。重複時の連番は自動 |
+| 解析結果を取り出す（目次、見出し、検索） | `parser(markdown, options)`。描画には `astToJSX(ast, options)` を使い、解析を1回で済ませる |
+| 見出しIDを日本語対応にする | `parser()` の `options.slugify` に自前の関数を渡す（`astToJSX()` に渡しても効かない）。重複時の連番は自動 |
 | コードブロックを差し替える | `options.renderRule` で `RuleType.codeBlock` を判定。`node.lang` と `node.text` が取れる |
 | 独自タグを割り当てる | `options.overrides` にコンポーネントを登録する |
 | 標準の要素を差し替える（`a`、`table`、`img`） | `options.overrides` |
@@ -522,7 +527,11 @@ example/                Vite製のデモSPA（bundled と remote を切り替え
 
 注意点:
 
-- 解析結果の先頭には、参照定義をまとめたノード（`RuleType.refCollection`）が入る。見出しや本文の抽出では読み飛ばす
+- 参照定義か脚注があるときは、解析結果の先頭に、それらをまとめたノード（`RuleType.refCollection`）が入る（ないときは入らない）。見出しや本文の抽出では読み飛ばす
+- 設定は、`parser()` と `astToJSX()` のどちらで効くかが分かれる。`slugify` と `evalUnserializableExpressions` は `parser()` で、`tagfilter`、`overrides`、`renderRule` は `astToJSX()` で効く。安全性の設定（7章）は、それぞれ効く側で固定する（`astToJSX()` に `tagfilter: false` を渡すと、`<script>` が実際のタグとして描画される）
+- `sanitizer` オプションを指定すると、URLに対する標準の保護（`javascript:` などの除去）がまるごと置き換わる。このパッケージでは指定しない（7章）
+- mdの表は、列の寄せを `th`、`td` の `style`（`text-align`）で出力する
+- 注意書きの引用ブロックは、標準の描画では英語の種別名を入れた `<header>` と、`markdown-alert-*` クラスが付く。6.3の描画にするため、`renderRule` で引用ブロックの描画を差し替える
 - 独自タグは、開始タグと終了タグの間に空行があっても中身がmdとして解釈される（大文字始まりのタグの場合）
 - このライブラリは有志による開発で、保守の中心は作者1人。直接 import するのは `core/markdown.ts` だけに限定し、差し替えの余地を残す（12章）
 
