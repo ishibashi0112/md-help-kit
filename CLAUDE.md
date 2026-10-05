@@ -27,8 +27,21 @@ Reactアプリ向けのアプリ内ヘルプキット（npmパッケージ）。
 
 ## コマンド
 
-雛形の作成後に記入する（インストール、テスト、ビルド、example の起動）。
+- インストール: `pnpm install`
+- テスト: `pnpm test`（監視モードは `pnpm test:watch`）
+- 型検査: `pnpm typecheck`
+- ビルド: `pnpm build`（`dist/` に出力）。型エラーがあってもビルドは止まらないので、型は `pnpm typecheck` で確認する
+- example の起動: 手順9で記入する
 
 ## 規約
 
-着手前に記入する（パッケージマネージャ、ビルドツール、改行コード、コメントの言語）。
+- パッケージマネージャ: pnpm（バージョンは `package.json` の `packageManager`）
+- ビルドツール: Vite のライブラリモード。型定義は `vite-plugin-dts` で出力する。`src/ui/styles.css` は変換せずに `dist/ui/styles.css` へ置く
+- 配布形式: ESM のみ
+- TypeScript: 6.0系を使う（7.0系には `vite-plugin-dts` が使う JS API がないため）
+- 相対 import には拡張子 `.js` を付ける（`.ts`、`.tsx` のファイルを指す場合も `.js`）。tsconfig の `NodeNext` で強制される。`moduleResolution: nodenext` の利用者でも型定義を解決できるようにするため
+- テスト: Vitest と Testing Library。DOM環境は jsdom（全体の既定）。DOMのない環境で確かめるテストは、ファイル先頭に `// @vitest-environment node` を書く
+- テストファイルはソースの隣に置く（`src/core/slug.ts` と `src/core/slug.test.ts`）
+- 開発とテストで使う React は 19（peer の下限は 18）
+- 改行コード: LF（`.gitattributes`、`.editorconfig`）。インデントはスペース2つ
+- コメントの言語: 日本語（公開APIの JSDoc を含む）
