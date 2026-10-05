@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>本文スタイル（ライト）</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+body{margin:0}
+a{color:#0B62BD}a:hover{color:#0B62BD}
+</style>
+</helmet>
+<div style="width: 380px; height: 2240px; box-sizing: border-box; display: flex; flex-direction: column; background: #FFFFFF; color: #1D2430; font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif; font-size: 14px; line-height: 1.7; border-left: 1px solid #D9DEE5">
+
+<div style="display: flex; align-items: center; gap: 4px; height: 48px; padding: 0 8px; border-bottom: 1px solid #D9DEE5; flex: none">
+<button aria-label="戻る" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #566170; cursor: pointer; padding: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<div style="flex: 1; font-size: 14px; font-weight: 500">ヘルプ</div>
+<button aria-label="目次" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #566170; cursor: pointer; padding: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg></button>
+<button aria-label="閉じる" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #566170; cursor: pointer; padding: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+
+<div style="padding: 12px 20px 0; flex: none">
+<label style="display: flex; align-items: center; gap: 8px; height: 44px; box-sizing: border-box; padding: 0 12px; background: #F3F5F8; border: 1px solid #D9DEE5; border-radius: 8px; color: #566170">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<input type="text" placeholder="ヘルプを検索" aria-label="ヘルプを検索" style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; color: #1D2430; font: inherit; font-size: 13px">
+</label>
+</div>
+
+<div style="padding: 8px 20px 24px; display: flex; flex-direction: column">
+
+<h1 style="margin: 16px 0 8px; font-size: 20px; line-height: 1.4; font-weight: 700">受注一覧</h1>
+<p style="margin: 0 0 12px">受注の検索、状態の確認、まとめての更新を行う画面です。取込の書式は<a href="#" style="text-decoration: underline; text-underline-offset: 3px">CSV取込</a>を、権限については <code style="font-family: 'IBM Plex Mono', monospace; font-size: 0.9em; background: #F3F5F8; border: 1px solid #D9DEE5; border-radius: 4px; padding: 1px 5px">ROLE_ORDER_EDIT</code> の説明を参照してください。</p>
+
+<h2 style="margin: 28px 0 10px; padding-bottom: 6px; font-size: 16px; line-height: 1.4; font-weight: 700; border-bottom: 1px solid #D9DEE5">絞り込み</h2>
+<p style="margin: 0 0 12px">列見出しをクリックすると、その列の条件を指定できます。</p>
+<ul style="margin: 0 0 12px; padding-left: 1.4em">
+<li>文字の列は部分一致で検索します</li>
+<li>日付の列は範囲で指定します
+<ul style="margin: 4px 0 0; padding-left: 1.4em">
+<li>開始日だけの指定もできます</li>
+</ul>
+</li>
+<li>複数の列に指定した条件は、すべて満たす行だけが残ります</li>
+</ul>
+
+<h2 style="margin: 28px 0 10px; padding-bottom: 6px; font-size: 16px; line-height: 1.4; font-weight: 700; border-bottom: 1px solid #D9DEE5">一括更新</h2>
+<ol style="margin: 0 0 12px; padding-left: 1.6em">
+<li>更新したい行を選択します</li>
+<li><kbd style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85em; background: #F3F5F8; border: 1px solid #D9DEE5; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px">Ctrl</kbd> + <kbd style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85em; background: #F3F5F8; border: 1px solid #D9DEE5; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px">E</kbd> を押して、変更後の状態を選びます</li>
+<li>内容を確認して保存します</li>
+</ol>
+
+<div style="margin: 0 0 12px; padding: 10px 12px; background: #FDF4E1; border: 1px solid #EBD29A; border-radius: 6px">
+<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #855300"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg>警告</div>
+<div style="margin-top: 2px">完了済みの行は変更できません。選択に含まれている場合、その行だけ更新されずに残ります。</div>
+</div>
+
+<div style="margin: 0 0 12px; overflow-x: auto; border: 1px solid #D9DEE5; border-radius: 6px">
+<table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5">
+<thead>
+<tr style="background: #F3F5F8">
+<th style="text-align: left; padding: 7px 10px; font-weight: 700; white-space: nowrap; border-bottom: 1px solid #D9DEE5">状態</th>
+<th style="text-align: center; padding: 7px 10px; font-weight: 700; white-space: nowrap; border-bottom: 1px solid #D9DEE5">変更</th>
+<th style="text-align: left; padding: 7px 10px; font-weight: 700; white-space: nowrap; border-bottom: 1px solid #D9DEE5">備考</th>
+</tr>
+</thead>
+<tbody>
+<tr><td style="padding: 7px 10px; border-bottom: 1px solid #D9DEE5; white-space: nowrap">手配中</td><td style="padding: 7px 10px; border-bottom: 1px solid #D9DEE5; text-align: center">可</td><td style="padding: 7px 10px; border-bottom: 1px solid #D9DEE5">制限なし</td></tr>
+<tr><td style="padding: 7px 10px; border-bottom: 1px solid #D9DEE5; white-space: nowrap">出荷待ち</td><td style="padding: 7px 10px; border-bottom: 1px solid #D9DEE5; text-align: center">可</td><td style="padding: 7px 10px; border-bottom: 1px solid #D9DEE5">手配中には戻せません</td></tr>
+<tr><td style="padding: 7px 10px; white-space: nowrap">完了</td><td style="padding: 7px 10px; text-align: center">不可</td><td style="padding: 7px 10px">管理者に依頼してください</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="margin: 0 0 12px; padding: 10px 12px; background: #EAF6EF; border: 1px solid #B5DCC5; border-radius: 6px">
+<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #17703F"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"></path><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.3 1 2.1h5c0-.8.4-1.6 1-2.1A6 6 0 0 0 12 3z"></path></svg>ヒント</div>
+<div style="margin-top: 2px">絞り込んだ状態で全選択すると、表示中の行だけが対象になります。</div>
+</div>
+
+<h3 style="margin: 24px 0 8px; font-size: 14px; line-height: 1.5; font-weight: 700">CSV取込の書式</h3>
+<pre style="margin: 0 0 12px; padding: 12px; background: #F3F5F8; border: 1px solid #D9DEE5; border-radius: 6px; overflow-x: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.6"><code>受注番号,状態,出荷予定日
+A-10231,出荷待ち,2026-10-12
+A-10232,手配中,
+A-10233,完了,2026-10-02</code></pre>
+
+<h3 style="margin: 24px 0 8px; font-size: 14px; line-height: 1.5; font-weight: 700">保存前の確認</h3>
+<div style="margin: 0 0 12px; display: flex; flex-direction: column; gap: 4px">
+<label style="display: flex; align-items: flex-start; gap: 8px"><input type="checkbox" checked disabled style="margin: 5px 0 0; accent-color: #0B62BD">対象の件数が想定どおりである</label>
+<label style="display: flex; align-items: flex-start; gap: 8px"><input type="checkbox" checked disabled style="margin: 5px 0 0; accent-color: #0B62BD">完了済みの行が含まれていない</label>
+<label style="display: flex; align-items: flex-start; gap: 8px"><input type="checkbox" disabled style="margin: 5px 0 0; accent-color: #0B62BD">出荷予定日が空欄の行を確認した</label>
+</div>
+
+<blockquote style="margin: 0 0 12px; padding: 2px 0 2px 14px; border-left: 3px solid #B4BCC8; color: #566170">保存した内容は変更履歴に記録され、あとから確認できます。</blockquote>
+
+<div style="margin: 0 0 8px; padding: 10px 12px; background: #EDF4FC; border: 1px solid #BCD6F2; border-radius: 6px">
+<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #0B62BD"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.5v.5"></path></svg>補足</div>
+<div style="margin-top: 2px">一覧は50件ずつ表示されます。</div>
+</div>
+<div style="margin: 0 0 8px; padding: 10px 12px; background: #F3EEFC; border: 1px solid #D3C2F1; border-radius: 6px">
+<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #6B35BF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v12H10l-5 4z"></path><path d="M12 7.5v3.5M12 13.5v.5"></path></svg>重要</div>
+<div style="margin-top: 2px">月次の締め処理中は、更新が一時的に止まります。</div>
+</div>
+<div style="margin: 0 0 12px; padding: 10px 12px; background: #FCEEEC; border: 1px solid #F0C2BD; border-radius: 6px">
+<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #B02F26"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"></path><path d="M12 8v5M12 16v.5"></path></svg>危険</div>
+<div style="margin-top: 2px">取消は元に戻せません。</div>
+</div>
+
+<h2 style="margin: 28px 0 10px; padding-bottom: 6px; font-size: 16px; line-height: 1.4; font-weight: 700; border-bottom: 1px solid #D9DEE5">よくある質問</h2>
+<details style="margin: 0 0 8px; border: 1px solid #D9DEE5; border-radius: 6px; padding: 0 12px">
+<summary style="min-height: 44px; display: flex; align-items: center; font-weight: 700; cursor: pointer">保存ボタンが押せません</summary>
+</details>
+<details open style="margin: 0 0 12px; border: 1px solid #D9DEE5; border-radius: 6px; padding: 0 12px">
+<summary style="min-height: 44px; display: flex; align-items: center; font-weight: 700; cursor: pointer">絞り込みを解除するには</summary>
+<p style="margin: 0 0 12px">表の右上にある「条件をクリア」を押します。列ごとに解除する場合は、列見出しからその条件を消します。</p>
+</details>
+
+<figure style="margin: 4px 0 12px">
+<div style="height: 132px; display: flex; align-items: center; justify-content: center; background: #F3F5F8; border: 1px solid #D9DEE5; border-radius: 6px; color: #566170; font-size: 13px">画像: img/filter.png</div>
+<figcaption style="margin-top: 6px; font-size: 12px; color: #566170">列見出しから開く絞り込みの画面</figcaption>
+</figure>
+
+<hr style="margin: 20px 0; border: none; border-top: 1px solid #D9DEE5">
+
+<p style="margin: 0">関連: <a href="#" style="text-decoration: underline; text-underline-offset: 3px">在庫照会</a>、<a href="#" style="text-decoration: underline; text-underline-offset: 3px">社内ポータルの運用手順<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px; vertical-align: -1px"><path d="M8 16L18 6M10 6h8v8"></path></svg></a></p>
+
+</div>
+
+<div style="margin-top: auto; padding: 10px 20px; border-top: 1px solid #D9DEE5; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #566170; flex: none">docs/orders.md</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":380,"height":2240}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
