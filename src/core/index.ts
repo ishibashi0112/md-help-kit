@@ -1,2 +1,2 @@
-// md-help-kit（コア層）の公開API。中身は DESIGN.md 13章の手順2以降で追加する
-export {};
+// md-help-kit（コア層）の公開API
+export type { HelpHeading, HelpIndexNode, HelpSearchHit } from "./types.js";
