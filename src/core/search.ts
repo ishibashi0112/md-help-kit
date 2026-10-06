@@ -25,6 +25,8 @@ interface IndexedPage {
 /** 見出し区間。本文直下の見出し（h1〜h6）で区切る。最初の見出しより前は heading が null の区間 */
 interface Section {
   heading: { id: string; text: string; normalized: string } | null;
+  /** ページの先頭を指す区間（最初の見出しより前の区間と、ページの最初の見出しが h1 のときのその区間） */
+  leading: boolean;
   body: NormalizedText;
 }
 
@@ -80,7 +82,8 @@ export function searchIndex(index: SearchIndex, query: string): HelpSearchHit[] 
       snippet,
     });
 
-    // タイトル一致はページごとに1件。区間は最初の見出しより前（headingId は null）とし、抜粋は本文の先頭
+    // タイトル一致はページごとに1件。区間は最初の見出しより前（headingId は null）とし、抜粋は本文の先頭。
+    // ページの先頭を指す区間は、同じ場所を指すので重ねて返さない
     const titleMatched = terms.every((term) => page.normalizedTitle.includes(term));
     if (titleMatched) {
       const first = page.sections.find((section) => section.body.original !== "");
@@ -88,7 +91,7 @@ export function searchIndex(index: SearchIndex, query: string): HelpSearchHit[] 
     }
 
     for (const section of page.sections) {
-      if (titleMatched && section.heading === null) continue;
+      if (titleMatched && section.leading) continue;
       const heading = section.heading?.normalized ?? "";
       if (section.heading !== null && terms.every((term) => heading.includes(term))) {
         headingHits.push(hit(section, snippetOf(section.body, terms)));
@@ -104,13 +107,15 @@ export function searchIndex(index: SearchIndex, query: string): HelpSearchHit[] 
 }
 
 function toSections(doc: MdDocument): Section[] {
-  const sections: { heading: Section["heading"]; texts: string[] }[] = [
-    { heading: null, texts: [] },
+  const sections: { heading: Section["heading"]; leading: boolean; texts: string[] }[] = [
+    { heading: null, leading: true, texts: [] },
   ];
   for (const block of doc.blocks) {
     if (block.type === "heading") {
       sections.push({
         heading: { id: block.id, text: block.text, normalized: normalize(block.text).normalized },
+        // ページの最初の見出しが h1 なら、その区間はページの先頭（タイトル）を指す
+        leading: sections.length === 1 && block.depth === 1,
         texts: [],
       });
     } else {
@@ -119,7 +124,11 @@ function toSections(doc: MdDocument): Section[] {
   }
   return sections
     .filter((section) => section.heading !== null || section.texts.length > 0)
-    .map((section) => ({ heading: section.heading, body: normalize(section.texts.join(" ")) }));
+    .map((section) => ({
+      heading: section.heading,
+      leading: section.leading,
+      body: normalize(section.texts.join(" ")),
+    }));
 }
 
 function blockText(block: Exclude<MdBlock, { type: "heading" }>): string {

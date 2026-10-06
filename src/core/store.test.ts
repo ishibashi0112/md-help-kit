@@ -427,11 +427,9 @@ describe("search", () => {
     const { store, source } = setup();
     const hits = await store.search("在庫");
     expect(hits.map((hit) => [hit.pageId, hit.pageTitle, hit.headingId])).toEqual([
-      // タイトルは目次のものを使う
+      // タイトルは目次のものを使う（タイトル一致のページでは、先頭の h1 の区間を重ねて返さない）
       ["stock", "在庫照会", null],
       ["stock/colors", "在庫数の色", null],
-      ["stock", "在庫照会", "在庫照会"],
-      ["stock/colors", "在庫数の色", "色"],
     ]);
     const loaded = source.loadPage.mock.calls.map(([id]) => id).filter((id) => id !== "_index");
     expect(loaded.sort()).toEqual(["orders", "stock", "stock/colors"]);

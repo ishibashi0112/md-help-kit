@@ -436,6 +436,7 @@ VS CodeやGitHubのプレビューでも注意書きとして表示されるた�
   - 見出し一致: 見出しの文字にすべての語がある区間
   - 本文一致: 見出しと本文を合わせて、すべての語がある区間
   - 同じ区間は1回だけ返す（上位の種類を優先）。同じ種類の中は、目次の順、ページ内の順に並べる
+  - タイトル一致したページでは、ページの先頭を指す区間（最初の見出しより前の区間と、ページの最初の見出しが h1 のときのその区間）を重ねて返さない
 - 抜粋（`snippet`）は、本文で最も手前にある一致箇所の前20字、後ろ40字を切り出し、切った側に「…」を付ける
   - 本文に一致がないとき（タイトル一致、見出しだけの一致）は、本文の先頭60字
 - 空の検索語は結果なし。件数の上限は設けない
@@ -458,19 +459,38 @@ import "md-help-kit/ui/styles.css";
 - 構成: ヘッダー（戻る、タイトル、閉じる）、検索欄、本文、ページ内目次、全体目次への切り替え
 - 状態ごとの表示: 読み込み中、ページなし（目次へ戻る導線を出す）、取得失敗（再試行ボタン）
 - `Esc` で閉じる。開いたときに検索欄へフォーカスしない（作業の邪魔をしない）
-- `role="complementary"` と `aria-label` を付ける
+  - 閉じるのは、ドロワーの中にフォーカスがあるときだけ（アプリ側の `Esc` と衝突させない）
+  - 検索欄に文字があるときは、まず文字を消す（その `Esc` はアプリ側へ伝えない）
+  - ドロワーの中にフォーカスがある状態で閉じたら、ドロワーに入る前の要素にフォーカスを戻す
+- `role="complementary"` と `aria-label`（`labels.title`）を付ける
+- 画面は「本文」「目次」「検索結果」の3つを切り替える
+  - 何も開いていないとき（`current` が null）は目次を出す
+  - 目次は全体目次で、表示中のページの下にそのページの h2 と h3（ページ内目次）を入れ子で並べる。ページや見出しを選ぶと本文に戻る
+  - 検索欄に入力すると、200ミリ秒待って検索し、結果（ページ名、見出し、抜粋）を出す。結果を選ぶとその見出しへ移動し、検索語を消して本文に戻る。検索語を空にしたら元の画面に戻る
+- ヘッダーのタイトルは `labels.title`（標準は「Help」、`jaLabels` では「ヘルプ」）で固定する。ページ名は本文の h1 で示す
+- 戻るボタンは、本文では `back()`、目次と検索結果では本文に戻る。戻れないときは無効にする
+- 本文はドロワーの中だけでスクロールする（見出しへのスクロールでアプリの画面を動かさない）
+- 閉じているときは何も描画しない。開くときは横から滑り込む（`prefers-reduced-motion: reduce` では動かさない）
+- `theme="light|dark"` で、ドロワーだけライトとダークを固定できる（`data-mhk-theme` をドロワーに付ける）
 
 ### 9.2 `HelpButton`
 
 - クリックで `toggle()`。`target` prop で開くページを固定できる
-- `children` で中身を差し替えられる
+  - `target` を指定したときは、閉じていればそのページを開く。開いていて、そのページを表示中なら閉じ、別のページなら移動する
+- `children` で中身を差し替えられる（標準はヘルプのアイコンで、`aria-label` は `labels.openHelp`）
+- `aria-expanded` でドロワーの開閉を示す。`className` などのボタンの属性も渡せる
 
 ### 9.3 スタイル
 
 - 素のCSSファイル1枚。CSS-in-JSやTailwindに依存しない
 - クラス名とCSS変数は接頭辞 `mhk-` を付ける
 - 調整用の変数: `--mhk-width`、`--mhk-bg`、`--mhk-fg`、`--mhk-border`、`--mhk-accent`、`--mhk-font`、`--mhk-radius`、`--mhk-z-index`
-- ライトとダーク: `prefers-color-scheme` に追従し、`data-mhk-theme="light|dark"` で固定もできる
+  - 見本の色を再現するため、次も調整用の変数とする: `--mhk-fg-muted`（薄い文字）、`--mhk-bg-subtle`（薄い背景）、`--mhk-quote-border`（引用の罫線）、注意書きの種別ごとの `--mhk-alert-<種別>-bg`、`--mhk-alert-<種別>-border`
+  - 注意書きの色を変えるときは、`--mhk-alert-<種別>`、`-bg`、`-border` の3つを設定する（見本の色は `color-mix()` では再現できないため、背景と枠は文字色に追従しない）
+  - 既定の値は `reference/` の見本の色と寸法。幅は360px、`--mhk-z-index` は1000、`--mhk-radius` は8px
+  - 既定は `:where(:root)` に置き、どこからでも上書きできるようにする
+  - フォントは読み込まない（OS のフォントを使う）
+- ライトとダーク: `prefers-color-scheme` に追従し、`data-mhk-theme="light|dark"` で固定もできる（`html` などの祖先に付けても、ドロワーに付けてもよい）
 
 ### 9.4 文言
 
@@ -480,6 +500,10 @@ import "md-help-kit/ui/styles.css";
 import { jaLabels } from "md-help-kit/ui";
 <HelpDrawer labels={jaLabels} />
 ```
+
+- 渡した項目だけを標準に重ねる（`{ ...jaLabels, title: "使い方" }` のようにも書ける）。`HelpButton` にも渡せる
+- 項目: `title`、`openHelp`、`back`、`close`、`contents`、`search`、`loading`、`notFound`、`goToContents`、`loadError`、`retry`、`searching`、`noResults`、`searchError`、`alerts`（`note`、`tip`、`important`、`warning`、`caution`）
+- 型 `HelpLabels`（全項目）と `HelpLabelsInput`（一部だけ）を公開する
 
 ### 9.5 本文スタイル
 
@@ -502,17 +526,20 @@ Markdownは構造だけを決め、見た目は決めない。`markdown-to-jsx` 
 | 引用 | 左に太さ3pxの罫線、文字色を一段薄く |
 | 注意書き | 種別ごとの色で、薄い背景と細い枠線、角丸の箱にする。先頭にアイコンとラベルを置く |
 | `kbd` | キーの形（枠線、下側をやや濃く）、等幅、0.85em |
+| `mark` | 半透明の黄色の背景（ライトとダークのどちらでも読めるように） |
 | `details` | 枠線つき。`summary` は太字で、開閉の印を付ける |
 | 画像 | 幅は最大100%、細い枠線と角丸 |
 | 水平線 | 細い罫線、上下に広めの余白 |
 
 実装上の注意:
 
-- 表を枠で包むため、`overrides` で `table` を差し替える
+- 表を枠で包むため、`overrides` で `table` を差し替える。枠はキーボードでも横スクロールできるよう、フォーカスできるようにする
+- タスクリストのチェックボックスは、`overrides` で `input` を差し替えて `disabled` にする
+- 注意書きは、`overrides` で `blockquote` を差し替え、アイコンとラベルを付けた箱にする
 - 注意書きの色は変数で調整できるようにする: `--mhk-alert-note`、`--mhk-alert-tip`、`--mhk-alert-important`、`--mhk-alert-warning`、`--mhk-alert-caution`
 - 注意書きのラベル（「注意」「警告」など）は `labels` に含め、言語を切り替えられるようにする
 - 色は意味を色だけに頼らない（アイコンとラベルを必ず併記する）
-- 見た目の基準は `example/` に置く見本ページ（全要素を1ページに並べたmd）とし、変更時はこれで確認する
+- 見た目の基準は `example/` に置く見本ページ（全要素を1ページに並べたmd。`example/docs/prose-sample.md`）とし、変更時はこれで確認する
 
 ## 10. テスト
 
@@ -570,6 +597,8 @@ src/
     toc.tsx
     search-box.tsx
     labels.ts
+    icons.tsx           アイコン
+    prose.tsx           本文の要素の差し替え（表の枠、注意書き、チェックボックス）
     styles.css          ドロワーの外枠と、本文スタイル（.mhk-prose）
     index.ts
   mermaid/

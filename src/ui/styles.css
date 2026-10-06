@@ -1,1 +1,800 @@
-/* md-help-kit/ui/styles.css（UI層のCSS）。中身は DESIGN.md 13章の手順7で記述する */
+/*
+ * md-help-kit/ui のCSS（DESIGN.md 9.3節、9.5節）。
+ * クラス名と変数には mhk- を付ける。色、余白、文字の大きさは reference/ の見本に合わせる。
+ * 本文のスタイルは .mhk-prose の配下に限定する（アプリ側のCSSと干渉させない）。
+ */
+
+/* ---------- 変数 ---------- */
+
+/* :where() で詳細度を 0 にし、利用者がどこからでも上書きできるようにする */
+:where(:root) {
+  --mhk-width: 360px;
+  --mhk-z-index: 1000;
+  --mhk-radius: 8px;
+  --mhk-font: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI",
+    "Noto Sans JP", Meiryo, sans-serif;
+}
+
+/* ライト（既定） */
+:where(:root) {
+  --mhk-color-scheme: light;
+  --mhk-bg: #ffffff;
+  --mhk-fg: #1d2430;
+  --mhk-border: #d9dee5;
+  --mhk-accent: #0b62bd;
+  --mhk-fg-muted: #566170;
+  --mhk-bg-subtle: #f3f5f8;
+  --mhk-quote-border: #b4bcc8;
+  --mhk-alert-note: #0b62bd;
+  --mhk-alert-note-bg: #edf4fc;
+  --mhk-alert-note-border: #bcd6f2;
+  --mhk-alert-tip: #17703f;
+  --mhk-alert-tip-bg: #eaf6ef;
+  --mhk-alert-tip-border: #b5dcc5;
+  --mhk-alert-important: #6b35bf;
+  --mhk-alert-important-bg: #f3eefc;
+  --mhk-alert-important-border: #d3c2f1;
+  --mhk-alert-warning: #855300;
+  --mhk-alert-warning-bg: #fdf4e1;
+  --mhk-alert-warning-border: #ebd29a;
+  --mhk-alert-caution: #b02f26;
+  --mhk-alert-caution-bg: #fceeec;
+  --mhk-alert-caution-border: #f0c2bd;
+}
+
+/* ダーク（OS の設定に追従） */
+@media (prefers-color-scheme: dark) {
+  :where(:root) {
+    --mhk-color-scheme: dark;
+    --mhk-bg: #15191f;
+    --mhk-fg: #e3e8ef;
+    --mhk-border: #2e3642;
+    --mhk-accent: #74b4f6;
+    --mhk-fg-muted: #a3adbb;
+    --mhk-bg-subtle: #1d232b;
+    --mhk-quote-border: #4a5564;
+    --mhk-alert-note: #74b4f6;
+    --mhk-alert-note-bg: #16263a;
+    --mhk-alert-note-border: #274b74;
+    --mhk-alert-tip: #62cc92;
+    --mhk-alert-tip-bg: #14291f;
+    --mhk-alert-tip-border: #245a3d;
+    --mhk-alert-important: #b99bf3;
+    --mhk-alert-important-bg: #231c36;
+    --mhk-alert-important-border: #46347a;
+    --mhk-alert-warning: #e5b450;
+    --mhk-alert-warning-bg: #2e2410;
+    --mhk-alert-warning-border: #6a521b;
+    --mhk-alert-caution: #f28c82;
+    --mhk-alert-caution-bg: #33191a;
+    --mhk-alert-caution-border: #74302d;
+  }
+}
+
+/* data-mhk-theme で固定する（html などの祖先、またはドロワー自身に付ける）。OS の設定より後に書いて優先させる */
+:where([data-mhk-theme="light"]) {
+  --mhk-color-scheme: light;
+  --mhk-bg: #ffffff;
+  --mhk-fg: #1d2430;
+  --mhk-border: #d9dee5;
+  --mhk-accent: #0b62bd;
+  --mhk-fg-muted: #566170;
+  --mhk-bg-subtle: #f3f5f8;
+  --mhk-quote-border: #b4bcc8;
+  --mhk-alert-note: #0b62bd;
+  --mhk-alert-note-bg: #edf4fc;
+  --mhk-alert-note-border: #bcd6f2;
+  --mhk-alert-tip: #17703f;
+  --mhk-alert-tip-bg: #eaf6ef;
+  --mhk-alert-tip-border: #b5dcc5;
+  --mhk-alert-important: #6b35bf;
+  --mhk-alert-important-bg: #f3eefc;
+  --mhk-alert-important-border: #d3c2f1;
+  --mhk-alert-warning: #855300;
+  --mhk-alert-warning-bg: #fdf4e1;
+  --mhk-alert-warning-border: #ebd29a;
+  --mhk-alert-caution: #b02f26;
+  --mhk-alert-caution-bg: #fceeec;
+  --mhk-alert-caution-border: #f0c2bd;
+}
+
+:where([data-mhk-theme="dark"]) {
+  --mhk-color-scheme: dark;
+  --mhk-bg: #15191f;
+  --mhk-fg: #e3e8ef;
+  --mhk-border: #2e3642;
+  --mhk-accent: #74b4f6;
+  --mhk-fg-muted: #a3adbb;
+  --mhk-bg-subtle: #1d232b;
+  --mhk-quote-border: #4a5564;
+  --mhk-alert-note: #74b4f6;
+  --mhk-alert-note-bg: #16263a;
+  --mhk-alert-note-border: #274b74;
+  --mhk-alert-tip: #62cc92;
+  --mhk-alert-tip-bg: #14291f;
+  --mhk-alert-tip-border: #245a3d;
+  --mhk-alert-important: #b99bf3;
+  --mhk-alert-important-bg: #231c36;
+  --mhk-alert-important-border: #46347a;
+  --mhk-alert-warning: #e5b450;
+  --mhk-alert-warning-bg: #2e2410;
+  --mhk-alert-warning-border: #6a521b;
+  --mhk-alert-caution: #f28c82;
+  --mhk-alert-caution-bg: #33191a;
+  --mhk-alert-caution-border: #74302d;
+}
+
+/* ---------- ドロワー ---------- */
+
+.mhk-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--mhk-z-index);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: var(--mhk-width);
+  max-width: 100vw;
+  background: var(--mhk-bg);
+  color: var(--mhk-fg);
+  border-left: 1px solid var(--mhk-border);
+  color-scheme: var(--mhk-color-scheme);
+  font-family: var(--mhk-font);
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: left;
+  animation: mhk-slide-in-right 160ms ease-out;
+}
+
+.mhk-drawer[data-mhk-side="left"] {
+  right: auto;
+  left: 0;
+  border-left: none;
+  border-right: 1px solid var(--mhk-border);
+  animation-name: mhk-slide-in-left;
+}
+
+.mhk-drawer *,
+.mhk-drawer *::before,
+.mhk-drawer *::after {
+  box-sizing: border-box;
+}
+
+@keyframes mhk-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes mhk-slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mhk-drawer {
+    animation: none;
+  }
+}
+
+.mhk-drawer :focus-visible {
+  outline: 2px solid var(--mhk-accent);
+  outline-offset: 2px;
+}
+
+.mhk-icon {
+  display: block;
+  flex: none;
+}
+
+.mhk-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--mhk-border);
+}
+
+.mhk-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mhk-icon-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: var(--mhk-radius);
+  background: none;
+  color: var(--mhk-fg-muted);
+  cursor: pointer;
+}
+
+.mhk-icon-button:hover:not(:disabled) {
+  background: var(--mhk-bg-subtle);
+  color: var(--mhk-fg);
+}
+
+.mhk-icon-button[aria-pressed="true"] {
+  color: var(--mhk-accent);
+}
+
+.mhk-icon-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 検索欄 */
+
+.mhk-search-area {
+  flex: none;
+  padding: 12px 20px 0;
+}
+
+.mhk-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--mhk-bg-subtle);
+  border: 1px solid var(--mhk-border);
+  border-radius: var(--mhk-radius);
+  color: var(--mhk-fg-muted);
+}
+
+.mhk-search:focus-within {
+  border-color: var(--mhk-accent);
+}
+
+.mhk-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--mhk-fg);
+  font: inherit;
+  font-size: 13px;
+}
+
+.mhk-search-input::placeholder {
+  color: var(--mhk-fg-muted);
+}
+
+.mhk-drawer .mhk-search-input:focus-visible {
+  outline: none;
+}
+
+/* 本文の領域。ドロワーの中だけでスクロールする */
+
+.mhk-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 20px 24px;
+}
+
+/* 状態ごとの表示（読み込み中、ページなし、取得失敗、検索結果なし） */
+
+.mhk-status {
+  margin: 16px 0;
+  color: var(--mhk-fg-muted);
+}
+
+.mhk-status p {
+  margin: 0 0 8px;
+}
+
+.mhk-action {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--mhk-border);
+  border-radius: var(--mhk-radius);
+  background: var(--mhk-bg);
+  color: var(--mhk-fg);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mhk-action:hover {
+  background: var(--mhk-bg-subtle);
+}
+
+/* 目次 */
+
+.mhk-toc {
+  margin: 8px 0;
+}
+
+.mhk-toc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mhk-toc-list .mhk-toc-list {
+  padding-left: 12px;
+}
+
+.mhk-toc-item {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--mhk-fg);
+  font: inherit;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mhk-toc-item:hover {
+  background: var(--mhk-bg-subtle);
+}
+
+.mhk-toc-item[aria-current="page"] {
+  color: var(--mhk-accent);
+  font-weight: 700;
+}
+
+.mhk-toc-heading {
+  min-height: 32px;
+  color: var(--mhk-fg-muted);
+  font-size: 13px;
+}
+
+.mhk-toc-heading[data-depth="3"] {
+  padding-left: 20px;
+}
+
+.mhk-toc-group-title {
+  display: block;
+  padding: 12px 8px 4px;
+  color: var(--mhk-fg-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 検索結果 */
+
+.mhk-results {
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mhk-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 8px;
+  border: none;
+  border-bottom: 1px solid var(--mhk-border);
+  border-radius: 0;
+  background: none;
+  color: var(--mhk-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mhk-result:hover {
+  background: var(--mhk-bg-subtle);
+}
+
+.mhk-result-title {
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.mhk-result-heading {
+  color: var(--mhk-fg-muted);
+  font-weight: 500;
+}
+
+.mhk-result-heading::before {
+  content: " › ";
+}
+
+.mhk-result-snippet {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--mhk-fg-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* ---------- HelpButton ---------- */
+
+.mhk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--mhk-border);
+  border-radius: var(--mhk-radius);
+  background: var(--mhk-bg);
+  color: var(--mhk-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mhk-button:hover {
+  background: var(--mhk-bg-subtle);
+}
+
+.mhk-button[aria-expanded="true"] {
+  border-color: var(--mhk-accent);
+  color: var(--mhk-accent);
+}
+
+/* ---------- 本文（.mhk-prose） ---------- */
+
+.mhk-prose {
+  /* 先頭の見出しの余白を本文の中に収める（先頭へスクロールしたときに余白が消えないように） */
+  display: flow-root;
+  scroll-margin-top: 8px;
+  color: var(--mhk-fg);
+  font-family: var(--mhk-font);
+  font-size: 14px;
+  line-height: 1.7;
+  /* 日本語の禁則を守りつつ、長い英数字やURLでも枠からはみ出さないようにする */
+  line-break: strict;
+  overflow-wrap: anywhere;
+}
+
+.mhk-prose :is(h1, h2, h3, h4, h5, h6) {
+  /* 目次から飛んだときに、上端に詰まりすぎないようにする */
+  scroll-margin-top: 12px;
+  font-weight: 700;
+}
+
+.mhk-prose h1 {
+  margin: 16px 0 8px;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.mhk-prose h2 {
+  margin: 28px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--mhk-border);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.mhk-prose h3 {
+  margin: 24px 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mhk-prose h4 {
+  margin: 20px 0 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mhk-prose :is(h5, h6) {
+  margin: 16px 0 6px;
+  color: var(--mhk-fg-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mhk-prose p {
+  margin: 0 0 12px;
+}
+
+.mhk-prose a {
+  color: var(--mhk-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 外部リンクの小さな矢印 */
+.mhk-prose a[target="_blank"]::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  vertical-align: -1px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16L18 6M10 6h8v8'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 16L18 6M10 6h8v8'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+}
+
+.mhk-prose :is(ul, ol) {
+  margin: 0 0 12px;
+  padding-left: 1.4em;
+}
+
+.mhk-prose ol {
+  padding-left: 1.6em;
+}
+
+.mhk-prose li :is(ul, ol) {
+  margin: 4px 0 0;
+}
+
+.mhk-prose li > p {
+  margin: 0 0 4px;
+}
+
+/* タスクリスト: 行頭の点を消し、チェックボックスを並べる */
+.mhk-prose li:has(> input[type="checkbox"]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-left: -1.4em;
+  list-style: none;
+}
+
+.mhk-prose li > input[type="checkbox"] {
+  flex: none;
+  margin: 5px 0 0;
+  accent-color: var(--mhk-accent);
+}
+
+.mhk-prose .mhk-table {
+  margin: 0 0 12px;
+  overflow-x: auto;
+  border: 1px solid var(--mhk-border);
+  border-radius: 6px;
+}
+
+.mhk-prose .mhk-table:focus-visible {
+  outline: 2px solid var(--mhk-accent);
+  outline-offset: 2px;
+}
+
+.mhk-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mhk-prose :is(th, td) {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--mhk-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.mhk-prose thead tr {
+  background: var(--mhk-bg-subtle);
+}
+
+.mhk-prose th {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mhk-prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mhk-prose :not(pre) > code {
+  padding: 1px 5px;
+  background: var(--mhk-bg-subtle);
+  border: 1px solid var(--mhk-border);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
+.mhk-prose pre {
+  margin: 0 0 12px;
+  padding: 12px;
+  overflow-x: auto;
+  background: var(--mhk-bg-subtle);
+  border: 1px solid var(--mhk-border);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  /* コードは折り返さず、横にスクロールさせる */
+  overflow-wrap: normal;
+  white-space: pre;
+}
+
+.mhk-prose pre code {
+  font: inherit;
+}
+
+.mhk-prose blockquote {
+  margin: 0 0 12px;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--mhk-quote-border);
+  color: var(--mhk-fg-muted);
+}
+
+.mhk-prose blockquote > :last-child,
+.mhk-prose .mhk-alert-body > :last-child,
+.mhk-prose details > :last-child {
+  margin-bottom: 0;
+}
+
+/* 注意書き（色だけに頼らず、アイコンとラベルを必ず付ける） */
+.mhk-prose .mhk-alert {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+}
+
+.mhk-prose .mhk-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.mhk-prose .mhk-alert-body {
+  margin-top: 2px;
+}
+
+.mhk-prose .mhk-alert[data-mhk-alert="note"] {
+  background: var(--mhk-alert-note-bg);
+  border-color: var(--mhk-alert-note-border);
+}
+.mhk-prose .mhk-alert[data-mhk-alert="note"] .mhk-alert-title {
+  color: var(--mhk-alert-note);
+}
+
+.mhk-prose .mhk-alert[data-mhk-alert="tip"] {
+  background: var(--mhk-alert-tip-bg);
+  border-color: var(--mhk-alert-tip-border);
+}
+.mhk-prose .mhk-alert[data-mhk-alert="tip"] .mhk-alert-title {
+  color: var(--mhk-alert-tip);
+}
+
+.mhk-prose .mhk-alert[data-mhk-alert="important"] {
+  background: var(--mhk-alert-important-bg);
+  border-color: var(--mhk-alert-important-border);
+}
+.mhk-prose .mhk-alert[data-mhk-alert="important"] .mhk-alert-title {
+  color: var(--mhk-alert-important);
+}
+
+.mhk-prose .mhk-alert[data-mhk-alert="warning"] {
+  background: var(--mhk-alert-warning-bg);
+  border-color: var(--mhk-alert-warning-border);
+}
+.mhk-prose .mhk-alert[data-mhk-alert="warning"] .mhk-alert-title {
+  color: var(--mhk-alert-warning);
+}
+
+.mhk-prose .mhk-alert[data-mhk-alert="caution"] {
+  background: var(--mhk-alert-caution-bg);
+  border-color: var(--mhk-alert-caution-border);
+}
+.mhk-prose .mhk-alert[data-mhk-alert="caution"] .mhk-alert-title {
+  color: var(--mhk-alert-caution);
+}
+
+.mhk-prose kbd {
+  padding: 1px 6px;
+  background: var(--mhk-bg-subtle);
+  border: 1px solid var(--mhk-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.85em;
+}
+
+.mhk-prose details {
+  margin: 0 0 12px;
+  padding: 0 12px;
+  border: 1px solid var(--mhk-border);
+  border-radius: 6px;
+}
+
+.mhk-prose details[open] {
+  padding-bottom: 12px;
+}
+
+.mhk-prose summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.mhk-prose summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 開閉の印 */
+.mhk-prose summary::before {
+  content: "";
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background-color: var(--mhk-fg-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  transition: transform 120ms ease-out;
+}
+
+.mhk-prose details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.mhk-prose img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--mhk-border);
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.mhk-prose hr {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid var(--mhk-border);
+}
+
+.mhk-prose del {
+  color: var(--mhk-fg-muted);
+}
+
+/* 蛍光ペンのような強調。ライトとダークのどちらでも読めるよう、半透明の黄色にする */
+.mhk-prose mark {
+  padding: 0 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, #ffd400 40%, transparent);
+  color: inherit;
+}
+
+/* 脚注 */
+.mhk-prose footer {
+  margin-top: 20px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mhk-border);
+  color: var(--mhk-fg-muted);
+  font-size: 12px;
+}

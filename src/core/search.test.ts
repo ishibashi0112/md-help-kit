@@ -113,6 +113,28 @@ describe("searchIndex", () => {
     expect(search("在庫").filter((hit) => hit.pageId === "stock" && hit.headingId === null)).toHaveLength(1);
   });
 
+  describe("タイトル一致したページの、先頭を指す区間", () => {
+    it("ページの最初の見出しが h1 なら、その区間は重ねて返さない", () => {
+      const target = [page("p", "在庫照会", "# 在庫照会\n\n在庫を見る。\n\n## 在庫の色\n\n在庫が少ない。")];
+      expect(search("在庫", target).map((hit) => hit.headingId)).toEqual([null, "在庫の色"]);
+    });
+
+    it("最初の見出しが h1 でなければ、その区間も返す", () => {
+      const target = [page("p", "在庫照会", "## 在庫の見方\n\n在庫を見る。")];
+      expect(search("在庫", target).map((hit) => hit.headingId)).toEqual([null, "在庫の見方"]);
+    });
+
+    it("2つ目以降の h1 の区間は返す", () => {
+      const target = [page("p", "在庫照会", "# 在庫照会\n\n本文\n\n# 在庫の補足\n\n本文")];
+      expect(search("在庫", target).map((hit) => hit.headingId)).toEqual([null, "在庫の補足"]);
+    });
+
+    it("タイトルに一致しなければ、先頭の h1 の区間も返す", () => {
+      const target = [page("p", "受注一覧", "# 受注一覧\n\n在庫を見る。")];
+      expect(search("在庫", target).map((hit) => hit.headingId)).toEqual(["受注一覧"]);
+    });
+  });
+
   it("全角と半角、大文字と小文字、半角カナの濁点の違いを吸収する", () => {
     const target = [page("a", "A", "ＡＢＣ製品と、ｶﾞｲﾄﾞの１２３番")];
     expect(search("abc", target)).toHaveLength(1);
