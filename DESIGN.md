@@ -387,7 +387,9 @@ VS CodeやGitHubのプレビューでも注意書きとして表示されるた�
 - 図は画像（`<img>` に SVG の data URL）として表示する。画像の中ではスクリプトも外部の取得も起きないので、mermaid の除去に漏れがあっても安全（7章の「HTMLを直接書き込まない」とそろう）
   - そのため、ラベルは HTML ではなく SVG の文字で描く（`htmlLabels: false`）。図の中の文字は選択できず、ラベルの中の記法（太字など）は使えない
   - 代替テキストは、mermaid の `accTitle`（図のタイトル）があればそれ、なければ元のコード
-- 配色は、描画する場所の `color-scheme`（ドロワーではライト／ダーク）を見て、mermaid の `default` か `dark` で描く。`color-scheme` が `light dark` のときは OS の設定に従い、OS の設定が変わったら描き直す
+- 配色は、描画する場所の `color-scheme`（ドロワーではライト／ダーク）を見て、mermaid の `default` か `dark` で描く。`color-scheme` が `light dark` のときは OS の設定に従う
+  - OS の設定が変わったときと、`data-mhk-theme` 属性（`html` などの祖先、ドロワー自身。9.3節）が変わったときに判定し直し、配色が変わっていれば描き直す
+  - それ以外の方法（クラスで変数を書き換えるなど）でアプリが配色を切り替えたときは、次に描画するまで（ページを開き直すまで）前の配色のまま
 - 描画中は空の枠を出す（`aria-busy`）
 - mermaid の設定は全体で共有なので、描画のたびに `initialize` を呼ぶ（`startOnLoad: false`、`securityLevel: "strict"`、配色など）。アプリ側でも mermaid を使う場合は影響しうる（READMEに書く）
 - 描画は1つずつ順番に行い、記法の誤りのときに mermaid が残す一時的な要素は取り除く

@@ -82,7 +82,8 @@ export function MermaidBlock({ code }: HelpCodeBlockProps): ReactNode {
   const [dark, setDark] = useState<boolean | null>(null);
   const [state, setState] = useState<State>({ status: "loading" });
 
-  // 配色を判定し、OS の設定が変わったら判定し直す
+  // 配色を判定し、OS の設定や data-mhk-theme（html などの祖先、ドロワー自身）が変わったら判定し直す。
+  // 配色が変わらなければ state も変わらないので、描き直さない
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return;
@@ -90,7 +91,16 @@ export function MermaidBlock({ code }: HelpCodeBlockProps): ReactNode {
     update();
     const media = darkMedia();
     media?.addEventListener("change", update);
-    return () => media?.removeEventListener("change", update);
+    const observer = new MutationObserver(update);
+    observer.observe(root.ownerDocument.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-mhk-theme"],
+      subtree: true,
+    });
+    return () => {
+      media?.removeEventListener("change", update);
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {

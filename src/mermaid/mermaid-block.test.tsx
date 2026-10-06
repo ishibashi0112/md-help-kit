@@ -124,6 +124,78 @@ describe("MermaidBlock", () => {
       await waitFor(() => expect(theme()).toBe("dark"));
       expect(mock.render).toHaveBeenCalledTimes(2);
     });
+
+    describe("data-mhk-theme が変わったとき", () => {
+      // jsdom は CSS を計算しないので、最も近い data-mhk-theme を color-scheme とみなす（styles.css と同じ結果）
+      const stubSchemeFromAttribute = () =>
+        vi.spyOn(window, "getComputedStyle").mockImplementation(
+          (element) =>
+            ({
+              colorScheme: element.closest("[data-mhk-theme]")?.getAttribute("data-mhk-theme") ?? "light",
+            }) as CSSStyleDeclaration,
+        );
+      afterEach(() => {
+        delete document.documentElement.dataset.mhkTheme;
+      });
+
+      it("html の data-mhk-theme が変わったら描き直す", async () => {
+        const MermaidBlock = await loadBlock();
+        stubSchemeFromAttribute();
+        render(<MermaidBlock code={CODE} lang="mermaid" />);
+        await screen.findByRole("img");
+        expect(theme()).toBe("default");
+
+        document.documentElement.dataset.mhkTheme = "dark";
+        await waitFor(() => expect(theme()).toBe("dark"));
+        expect(mock.render).toHaveBeenCalledTimes(2);
+
+        delete document.documentElement.dataset.mhkTheme;
+        await waitFor(() => expect(theme()).toBe("default"));
+        expect(mock.render).toHaveBeenCalledTimes(3);
+      });
+
+      it("祖先の要素（ドロワーなど）の data-mhk-theme が変わったら描き直す", async () => {
+        const MermaidBlock = await loadBlock();
+        stubSchemeFromAttribute();
+        const { container } = render(
+          <aside data-mhk-theme="dark">
+            <MermaidBlock code={CODE} lang="mermaid" />
+          </aside>,
+        );
+        await screen.findByRole("img");
+        expect(theme()).toBe("dark");
+
+        container.querySelector("aside")?.setAttribute("data-mhk-theme", "light");
+        await waitFor(() => expect(theme()).toBe("default"));
+        expect(mock.render).toHaveBeenCalledTimes(2);
+      });
+
+      it("配色が変わらなければ描き直さない", async () => {
+        const MermaidBlock = await loadBlock();
+        stubSchemeFromAttribute();
+        render(<MermaidBlock code={CODE} lang="mermaid" />);
+        await screen.findByRole("img");
+
+        await act(async () => {
+          document.documentElement.dataset.mhkTheme = "light";
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        });
+        expect(mock.render).toHaveBeenCalledTimes(1);
+      });
+
+      it("アンマウントしたら監視をやめる", async () => {
+        const MermaidBlock = await loadBlock();
+        const getComputedStyle = stubSchemeFromAttribute();
+        const { unmount } = render(<MermaidBlock code={CODE} lang="mermaid" />);
+        await screen.findByRole("img");
+        unmount();
+        const calls = getComputedStyle.mock.calls.length;
+
+        document.documentElement.dataset.mhkTheme = "dark";
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(getComputedStyle.mock.calls.length).toBe(calls);
+      });
+    });
   });
 
   describe("誤り", () => {
