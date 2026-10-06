@@ -621,6 +621,8 @@ example/                Vite製のデモSPA（bundled と remote を切り替え
   index.html
   src/                  デモのアプリ（受注一覧、在庫照会、設定の3画面）と、独自タグの例
   docs/                 ヘルプのmd（本文の見本 prose-sample.md を含む）
+README.md               利用者向けの説明（英語）
+README.ja.md            README.md の日本語版（内容と構成を README.md とそろえる）
 ```
 
 `example/` は次のように作る。
@@ -650,7 +652,7 @@ example/                Vite製のデモSPA（bundled と remote を切り替え
 7. UI層（`HelpDrawer`、`HelpButton`、CSS、本文スタイルと見本ページ）
 8. `md-help-kit/mermaid`
 9. `example/` のデモアプリ
-10. README
+10. README（英語の `README.md` と日本語の `README.ja.md`）
 
 各段階でテストを通してから次へ進む。
 

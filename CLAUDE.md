@@ -46,3 +46,4 @@ Reactアプリ向けのアプリ内ヘルプキット（npmパッケージ）。
 - 改行コード: LF（`.gitattributes`、`.editorconfig`）。インデントはスペース2つ
 - コメントの言語: 日本語（公開APIの JSDoc を含む）
 - 開発時の警告とエラーの文言: 英語（`DESIGN.md` 11章）
+- README: 英語の `README.md` と日本語の `README.ja.md` の2つ。片方を変えたら、もう片方も同じ内容にそろえる
