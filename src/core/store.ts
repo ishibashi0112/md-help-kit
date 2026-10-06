@@ -48,6 +48,16 @@ export interface HelpStore
    */
   setScreen(order: number, target: string | null): void;
   removeScreen(order: number): void;
+
+  // 以下は HelpContent 用（公開しない）
+
+  /** 移動（navigate、back、open、画面への追従）の回数。同じ見出しへの移動でも増える */
+  getNavigation(): number;
+  /** 取得済みのページの解析結果 */
+  getDocument(id: string): MdDocument | undefined;
+  getSource(): HelpSource;
+  /** ページが存在するかを確かめる（取得したページはキャッシュに入る）。取得に失敗したときは true */
+  checkPage(id: string): Promise<boolean>;
 }
 
 interface LoadedPage {
@@ -83,6 +93,7 @@ export function createHelpStore(options: HelpStoreOptions): HelpStore {
   let screenTarget: string | null = null;
 
   let current: CurrentEntry | null = null;
+  let navigation = 0;
   // 表示中のページの取得ごとに増やす。後から始めた取得の結果だけを使うため
   let pageToken = 0;
   let history: string[] = [];
@@ -173,18 +184,12 @@ export function createHelpStore(options: HelpStoreOptions): HelpStore {
     const requested = generation;
     const request = Promise.resolve()
       .then(() => source.loadPage(id))
-      .then(
-        (markdown) => {
-          const doc = parseMarkdown(markdown);
-          const page = { markdown, doc, headings: getHeadings(doc) };
-          if (requested === generation) pages.set(id, page);
-          return page;
-        },
-        (error: unknown) => {
-          if (isNotFound(error)) devWarn(`The help page "${id}" does not exist.`);
-          throw error;
-        },
-      )
+      .then((markdown) => {
+        const doc = parseMarkdown(markdown);
+        const page = { markdown, doc, headings: getHeadings(doc) };
+        if (requested === generation) pages.set(id, page);
+        return page;
+      })
       .finally(() => {
         if (pageRequests.get(id) === request) pageRequests.delete(id);
       });
@@ -201,13 +206,15 @@ export function createHelpStore(options: HelpStoreOptions): HelpStore {
       return;
     }
     openFirstPageWhenIndexReady = false;
+    navigation++;
 
-    // 同じページ内の見出しへの移動は、取得し直さず、履歴にも積まない
+    // 同じページ内の見出しへの移動は、取得し直さず、履歴にも積まない。
+    // 同じ見出しへの移動でも、スクロールし直せるよう通知する
     if (current !== null && current.id === id) {
       if (current.headingId !== parsed.headingId) {
         current = { ...current, headingId: parsed.headingId };
-        emit();
       }
+      emit();
       return;
     }
 
@@ -229,7 +236,10 @@ export function createHelpStore(options: HelpStoreOptions): HelpStore {
     };
     loadPage(id).then(
       () => settle("ready"),
-      (error: unknown) => settle(isNotFound(error) ? "not-found" : "error"),
+      (error: unknown) => {
+        if (isNotFound(error)) devWarn(`The help page "${id}" does not exist.`);
+        settle(isNotFound(error) ? "not-found" : "error");
+      },
     );
   }
 
@@ -242,6 +252,11 @@ export function createHelpStore(options: HelpStoreOptions): HelpStore {
     const entries = indexPages(index);
     const request = Promise.allSettled(entries.map((entry) => loadPage(entry.id))).then(
       (results) => {
+        results.forEach((result, i) => {
+          if (result.status === "rejected" && isNotFound(result.reason)) {
+            devWarn(`The help page "${entries[i]?.id}" listed in _index.md does not exist.`);
+          }
+        });
         const built = buildSearchIndex(
           entries.flatMap((entry, i) => {
             const result = results[i];
@@ -374,6 +389,14 @@ export function createHelpStore(options: HelpStoreOptions): HelpStore {
     },
     reload: refetch,
     search,
+    getNavigation: () => navigation,
+    getDocument: (id) => pages.get(id)?.doc,
+    getSource: () => source,
+    checkPage: (id) =>
+      loadPage(id).then(
+        () => true,
+        (error: unknown) => !isNotFound(error),
+      ),
   };
 }
 

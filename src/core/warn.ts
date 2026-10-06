@@ -22,7 +22,8 @@ export function resetDevWarnings(): void {
   warned.clear();
 }
 
-function isDevelopment(): boolean {
+/** 開発時（`NODE_ENV` が production 以外）か */
+export function isDevelopment(): boolean {
   try {
     return process.env.NODE_ENV !== "production";
   } catch {

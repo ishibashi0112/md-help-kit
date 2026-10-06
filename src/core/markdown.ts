@@ -5,6 +5,7 @@ import { astToJSX, type MarkdownToJSX, parser, RuleType } from "markdown-to-jsx/
 import { type ComponentType, createElement, Fragment, type ReactNode } from "react";
 import { createTagPolicy, isAllowedUrl, isComponentName, sanitizeAttributes } from "./sanitize.js";
 import { slugify } from "./slug.js";
+import type { HelpCodeBlockProps } from "./types.js";
 
 type AstNode = MarkdownToJSX.ASTNode;
 
@@ -76,7 +77,17 @@ export interface RenderOptions {
   allowedTags?: readonly string[];
   /** md内で使える独自タグ（6.1節）。名前が大文字始まりのものだけが有効 */
   components?: Readonly<Record<string, ComponentType<any>>>;
+  /** 標準の要素（a、img、table、blockquote など）の差し替え。名前が小文字のものだけが有効 */
+  overrides?: Readonly<Record<string, ComponentType<any>>>;
+  /**
+   * 言語名ごとのコードブロックの描画（6.2節）。言語名の大文字小文字は区別しない。
+   * `*` は個別の登録がない全言語（言語名のないものを含む。そのときの lang は空文字）に使う
+   */
+  codeBlocks?: Readonly<Record<string, ComponentType<HelpCodeBlockProps>>>;
 }
+
+/** 注意書きの種別（6.3節）。data-mhk-alert 属性には小文字で出す */
+const ALERT_KINDS: ReadonlySet<string> = new Set(["note", "tip", "important", "warning", "caution"]);
 
 /**
  * 解析済みのmdを描画する。安全性の制限（DESIGN.md 7章）は、ここで必ず適用する。
@@ -88,8 +99,14 @@ export function renderMarkdown(doc: MdDocument, options: RenderOptions = {}): Re
     allowedTags: options.allowedTags,
     componentNames: Object.keys(components),
   });
-  const overrides = Object.fromEntries(
-    Object.entries(components).filter(([name]) => isComponentName(name)),
+  const overrides: Record<string, ComponentType<any>> = {
+    ...Object.fromEntries(
+      Object.entries(options.overrides ?? {}).filter(([name]) => !isComponentName(name)),
+    ),
+    ...Object.fromEntries(Object.entries(components).filter(([name]) => isComponentName(name))),
+  };
+  const codeBlocks = new Map(
+    Object.entries(options.codeBlocks ?? {}).map(([lang, component]) => [lang.toLowerCase(), component]),
   );
 
   return astToJSX(asts.get(doc) ?? [], {
@@ -119,12 +136,65 @@ export function renderMarkdown(doc: MdDocument, options: RenderOptions = {}): Re
           // 許可しないURLの画像は、代替テキストを文字で表示する
           if (node.target === null || !isAllowedUrl(node.target)) return node.alt ?? "";
           return next();
+        case RuleType.codeBlock: {
+          const lang = node.lang ?? "";
+          const component = (lang !== "" && codeBlocks.get(lang.toLowerCase())) || codeBlocks.get("*");
+          if (component) return createElement(component, { key: state.key, code: node.text, lang });
+          return next();
+        }
+        case RuleType.blockQuote: {
+          if (node.alert === undefined) return next();
+          const blockquote = overrides.blockquote ?? "blockquote";
+          const kind = node.alert.toLowerCase();
+          if (ALERT_KINDS.has(kind)) {
+            return createElement(
+              blockquote,
+              { key: state.key, "data-mhk-alert": kind },
+              renderChildren(node.children, state),
+            );
+          }
+          // 5種類以外は普通の引用にし、ライブラリが取り除いた [!XXX] を文字で残す（GitHub と同じ見た目）
+          return createElement(
+            blockquote,
+            { key: state.key },
+            createElement("p", { key: "alert" }, `[!${node.alert}]`),
+            renderChildren(node.children, state),
+          );
+        }
         default:
           return next();
       }
     },
     createElement: createElementWithoutRawHtml,
   });
+}
+
+/** mdのリンクと、HTML の <a> のリンク先をすべて集める（開発時の確認用） */
+export function collectLinkTargets(doc: MdDocument): string[] {
+  const targets: string[] = [];
+  const visit = (node: AstNode) => {
+    if (node.type === RuleType.link && node.target !== null) targets.push(node.target);
+    if (node.type === RuleType.htmlBlock || node.type === RuleType.htmlSelfClosing) {
+      const href = node.attrs?.href;
+      if (node.tag.toLowerCase() === "a" && typeof href === "string") targets.push(href);
+    }
+    for (const child of descendantsOf(node)) visit(child);
+  };
+  (asts.get(doc) ?? []).forEach(visit);
+  return targets;
+}
+
+/** 子ノードをすべて返す（リストの項目と表のセルを含む） */
+function descendantsOf(node: AstNode): AstNode[] {
+  switch (node.type) {
+    case RuleType.orderedList:
+    case RuleType.unorderedList:
+      return node.items.flat();
+    case RuleType.table:
+      return [...node.header, ...node.cells.flat()].flat();
+    default:
+      return childrenOf(node);
+  }
 }
 
 /** 許可していないタグを、タグ名と中身の文字で表示する。属性は表示しない */

@@ -1,4 +1,5 @@
 // md-help-kit（コア層）の公開API
+export { HelpContent, type HelpContentProps } from "./content.js";
 export { HelpLoadError, type HelpLoadErrorOptions, HelpNotFoundError } from "./errors.js";
 export { useHelp, useHelpPage } from "./hooks.js";
 export { HelpProvider, type HelpProviderProps } from "./provider.js";
