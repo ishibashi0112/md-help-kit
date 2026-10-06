@@ -53,7 +53,7 @@ UI層はコア層の公開APIだけを使って実装する（内部モジュー
 |---|---|---|
 | peer | `react`、`react-dom` | 18以上 |
 | dependencies | `markdown-to-jsx` | これ1つだけ |
-| peer（任意） | `mermaid` | `md-help-kit/mermaid` を使う人だけが入れる。`peerDependenciesMeta` で optional 指定 |
+| peer（任意） | `mermaid` | `md-help-kit/mermaid` を使う人だけが入れる。`peerDependenciesMeta` で optional 指定。対応する版は `^11 \|\| ^12`（v11 と v12 で動作を確認済み） |
 
 - mdの解析（目次、見出し、検索用の本文抽出）と描画は、すべて `markdown-to-jsx` で行う
 - React向けの入口 `markdown-to-jsx/react` を使う（v9以降。メインの入口のReact用コードは非推奨）
@@ -383,6 +383,15 @@ VS CodeやGitHubのプレビューでも注意書きとして表示されるた�
 - `mermaid` は初回の描画時に動的 import する（使わないページでは読み込まれない）
 - `securityLevel: "strict"` で初期化する
 - 記法の誤りは、図の代わりにエラー文と元のコードを表示する
+  - エラー文は mermaid のもの（英語）。mermaid の読み込みに失敗したときも同じ表示にする（次の描画で読み込み直す）
+- 図は画像（`<img>` に SVG の data URL）として表示する。画像の中ではスクリプトも外部の取得も起きないので、mermaid の除去に漏れがあっても安全（7章の「HTMLを直接書き込まない」とそろう）
+  - そのため、ラベルは HTML ではなく SVG の文字で描く（`htmlLabels: false`）。図の中の文字は選択できず、ラベルの中の記法（太字など）は使えない
+  - 代替テキストは、mermaid の `accTitle`（図のタイトル）があればそれ、なければ元のコード
+- 配色は、描画する場所の `color-scheme`（ドロワーではライト／ダーク）を見て、mermaid の `default` か `dark` で描く。`color-scheme` が `light dark` のときは OS の設定に従い、OS の設定が変わったら描き直す
+- 描画中は空の枠を出す（`aria-busy`）
+- mermaid の設定は全体で共有なので、描画のたびに `initialize` を呼ぶ（`startOnLoad: false`、`securityLevel: "strict"`、配色など）。アプリ側でも mermaid を使う場合は影響しうる（READMEに書く）
+- 描画は1つずつ順番に行い、記法の誤りのときに mermaid が残す一時的な要素は取り除く
+- 図とエラーの見た目は `ui/styles.css` に書く（`.mhk-prose .mhk-mermaid`）
 
 ## 7. 安全性
 
@@ -527,6 +536,7 @@ Markdownは構造だけを決め、見た目は決めない。`markdown-to-jsx` 
 | 注意書き | 種別ごとの色で、薄い背景と細い枠線、角丸の箱にする。先頭にアイコンとラベルを置く |
 | `kbd` | キーの形（枠線、下側をやや濃く）、等幅、0.85em |
 | `mark` | 半透明の黄色の背景（ライトとダークのどちらでも読めるように） |
+| Mermaid の図 | 中央に置き、幅は最大100%。描画中は薄い背景の空の枠。記法の誤りは危険の色の箱に、エラー文（等幅）と元のコードを並べる |
 | `details` | 枠線つき。`summary` は太字で、開閉の印を付ける |
 | 画像 | 幅は最大100%、細い枠線と角丸 |
 | 水平線 | 細い罫線、上下に広めの余白 |

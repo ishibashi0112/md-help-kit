@@ -1,2 +1,2 @@
-// md-help-kit/mermaid の公開API。中身は DESIGN.md 13章の手順8で追加する
-export {};
+// md-help-kit/mermaid の公開API。コア層は src/core/index.ts が公開しているものだけを使う
+export { MermaidBlock } from "./mermaid-block.js";

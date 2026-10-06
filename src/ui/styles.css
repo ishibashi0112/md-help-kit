@@ -798,3 +798,45 @@
   color: var(--mhk-fg-muted);
   font-size: 12px;
 }
+
+/* Mermaid の図（md-help-kit/mermaid の MermaidBlock） */
+.mhk-prose .mhk-mermaid {
+  margin: 0 0 12px;
+}
+
+/* 描画中は空の枠を出す */
+.mhk-prose .mhk-mermaid[aria-busy="true"] {
+  min-height: 120px;
+  background: var(--mhk-bg-subtle);
+  border-radius: 6px;
+}
+
+.mhk-prose .mhk-mermaid img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: none;
+  border-radius: 0;
+}
+
+.mhk-prose .mhk-mermaid-error {
+  padding: 10px 12px;
+  background: var(--mhk-alert-caution-bg);
+  border: 1px solid var(--mhk-alert-caution-border);
+  border-radius: 6px;
+}
+
+.mhk-prose .mhk-mermaid-message {
+  margin: 0 0 8px;
+  color: var(--mhk-alert-caution);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.mhk-prose .mhk-mermaid-error pre {
+  margin: 0;
+  background: var(--mhk-bg);
+}
