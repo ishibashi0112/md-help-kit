@@ -1,4 +1,14 @@
-// 公開する型（DESIGN.md 5.3節）
+// 公開する型（DESIGN.md 4章、5.3節）
+
+/** ヘルプのmdの取得元（4章） */
+export interface HelpSource {
+  /** _index.md の中身を返す */
+  loadIndex(): Promise<string>;
+  /** ページIDに対応するmdの中身を返す。存在しなければ HelpNotFoundError を投げる */
+  loadPage(id: string): Promise<string>;
+  /** md内の相対パス（画像など）を、表示用URLに解決する。省略時は変換しない */
+  resolveAsset?(pageId: string, path: string): string;
+}
 
 /** 目次ツリーの1項目。リンクのある項目はページ、リンクのない項目はグループ見出し（3.1節） */
 export type HelpIndexNode =

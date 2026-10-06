@@ -139,6 +139,15 @@ export interface HelpSource {
 
 目次の解析、見出しの抽出、リンクの解決、検索は、すべて取得元に依存しない共通処理にする。
 
+エラーは `errors.ts` に置き、利用者が自作する取得元からも投げられるよう公開する。文言は英語（11章）。
+
+| クラス | 持つ情報 |
+|---|---|
+| `HelpNotFoundError` | `pageId`（目次のときは `_index`） |
+| `HelpLoadError` | `pageId`、`status`（HTTPのステータス。HTTPの応答がなければ undefined）、`cause`（元のエラー） |
+
+ページIDに空、`.`、`..` のセグメントがあるとき（`../secret` など）は、取得せずに `HelpNotFoundError` を投げる（docs の外を読ませないため）。
+
 ### 4.1 `bundled(modules)`：ビルドに含める
 
 ```ts
@@ -148,8 +157,11 @@ const source = bundled(
 ```
 
 - 引数は `Record<string, string | (() => Promise<string>)>`（即時読み込み、遅延読み込みの両方を受ける）
-- キーの共通の接頭辞と `.md` を取り除いてページIDにする
-- 画像は v0.1 では絶対URLと `public/` 配下のパスのみ対応（制限事項としてREADMEに書く）
+  - 型は、これと同じ意味のジェネリクス（`<T extends string | (() => Promise<string>)>(modules: Record<string, T>)`）にする。この型をそのまま書くと、`import.meta.glob` の型がこの型から推論され、上の例が型エラーになるため
+- キーの共通の接頭辞と `.md` を取り除いてページIDにする。接頭辞はディレクトリ単位で求める（`order.md` と `orders.md` から `./docs/order` にしない）
+- `.md` で終わらないキーは無視する（開発時は警告）
+- 遅延読み込みが失敗したとき、文字列以外が返ったとき（`query: "?raw"` や `import: "default"` の付け忘れ）は `HelpLoadError`
+- 画像は v0.1 では絶対URLと `public/` 配下のパスのみ対応（制限事項としてREADMEに書く）。`resolveAsset` は持たない
 
 ### 4.2 `remote(baseUrl, options?)`：外部に置く
 
@@ -160,12 +172,16 @@ const source2 = remote("https://files.example.co.jp/app-help", {
 });
 ```
 
-- `loadIndex` は `${baseUrl}/_index.md`、`loadPage(id)` は `${baseUrl}/${id}.md` を取得する
+- `loadIndex` は `${baseUrl}/_index.md`、`loadPage(id)` は `${baseUrl}/${id}.md` を取得する（`baseUrl` の末尾の `/` は取り除く）
 - パスの各セグメントは `encodeURIComponent` する
 - `fetch` は標準で `cache: "no-cache"`（毎回サーバーに更新確認。差し替えが即反映される）
-- `options.fetchInit` で `fetch` の設定を上書きできる（認証付き、別オリジンなど）
-- 404 は `HelpNotFoundError`、それ以外の失敗は `HelpLoadError`
+- `options.fetchInit` で `fetch` の設定を上書きできる（認証付き、別オリジンなど）。標準の設定に重ねて上書きする（`headers` などは丸ごと置き換わる）
+- 404 は `HelpNotFoundError`、それ以外の失敗（ネットワークの失敗、404 以外のエラー状態、本文の読み込みの失敗）は `HelpLoadError`
+- 200 でも `Content-Type` が `text/html` のときは `HelpNotFoundError`（開発時は警告）。SPAのサーバーは、存在しないパスにもアプリのHTMLを返すことがあるため
 - 相対パスの画像は、ページのURLを基準に解決する（`resolveAsset` を実装）
+  - `/` で始まるパスは、ページのURLのサーバーのルートから（URLの標準どおり。bundled の `public/` 配下のパスと同じ意味になる）
+  - 絶対URL（スキーム付き、`//` 始まり）はそのまま返す
+  - `baseUrl` が相対（`/help` など）なら、結果も相対のまま返す（表示中の文書を基準に解決させるため）
 - 別オリジンに置く場合、CORSの設定は利用者の責任（READMEに書く）
 
 ## 5. コア層のAPI
@@ -494,6 +510,8 @@ Vitest と Testing Library を使う。
 - mdに、登録も許可もされていないタグがある（同じタグ名につき1回だけ）
 - `allowedTags` に、常に禁止するタグがある（7章）
 - `components` に、小文字始まりの名前がある（7章）
+- `bundled` に、`.md` で終わらないキーがある（4.1節）
+- `remote` で、mdの代わりにHTMLが返ってきた（4.2節）
 
 ## 12. ディレクトリ構成
 

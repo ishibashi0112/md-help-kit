@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { classifyLink } from "./links.js";
+import { classifyLink, isValidPageId } from "./links.js";
+
+describe("isValidPageId", () => {
+  it.each(["orders", "stock/colors", "設定/画面 一覧", "_index", "a.b"])("%j は使える", (id) => {
+    expect(isValidPageId(id)).toBe(true);
+  });
+
+  it.each(["", "/orders", "orders/", "stock//colors", ".", "./orders", "..", "../secret", "stock/../x"])(
+    "%j は使えない",
+    (id) => {
+      expect(isValidPageId(id)).toBe(false);
+    },
+  );
+});
 
 describe("classifyLink", () => {
   describe("ページへのリンク", () => {

@@ -63,6 +63,14 @@ function resolvePageLink(href: string, currentPageId: string): string | null {
   return headingId === "" ? id : `${id}#${headingId}`;
 }
 
+/**
+ * ページIDとして取得してよいか。
+ * 空、`.`、`..` のセグメントを含むもの（docs の外を指しうるもの）は使えない。
+ */
+export function isValidPageId(id: string): boolean {
+  return id.split("/").every((segment) => segment !== "" && segment !== "." && segment !== "..");
+}
+
 function decode(text: string): string | null {
   try {
     return decodeURIComponent(text);
