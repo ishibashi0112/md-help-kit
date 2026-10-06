@@ -1,0 +1,348 @@
+/* デモアプリの見た目。ヘルプ（.mhk-*）の見た目は md-help-kit/ui/styles.css が担当する */
+
+:root {
+  color-scheme: light dark;
+  --app-bg: light-dark(#f4f6f9, #0f1318);
+  --app-surface: light-dark(#ffffff, #171c22);
+  --app-fg: light-dark(#1d2430, #e3e8ef);
+  --app-muted: light-dark(#566170, #a3adbb);
+  --app-border: light-dark(#d9dee5, #2e3642);
+  --app-accent: light-dark(#0b62bd, #74b4f6);
+  --app-accent-fg: light-dark(#ffffff, #0f1318);
+  --app-out: light-dark(#b02f26, #f28c82);
+  --app-out-bg: light-dark(#fceeec, #33191a);
+  --app-low: light-dark(#855300, #e5b450);
+  --app-low-bg: light-dark(#fdf4e1, #2e2410);
+}
+
+/* ヘルプと同じ data-mhk-theme で、アプリのライトとダークも固定する */
+:root[data-mhk-theme="light"] {
+  color-scheme: light;
+}
+:root[data-mhk-theme="dark"] {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI",
+    "Noto Sans JP", Meiryo, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/*
+ * フォームの部品の見た目は .demo-app の中だけに付ける（ポータルで body に出るドロワーには及ばない）。
+ * :where() で詳細度を 0 にし、HelpButton（.mhk-button）などのクラスの指定を優先させる
+ */
+:where(.demo-app) :where(button, input, select) {
+  font: inherit;
+  color: inherit;
+}
+
+:where(.demo-app) :where(button, select, input[type="text"], input[type="search"]) {
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+}
+
+:where(.demo-app) :where(button) {
+  cursor: pointer;
+}
+
+:where(.demo-app) :where(button:disabled) {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* ---------- 外枠 ---------- */
+
+/* ドロワーが開いている間は、ドロワーの幅だけ画面をずらす（幅の狭い画面では重ねる） */
+@media (min-width: 960px) {
+  .demo-app[data-help-open="right"] {
+    padding-right: var(--mhk-width);
+  }
+  .demo-app[data-help-open="left"] {
+    padding-left: var(--mhk-width);
+  }
+}
+
+.demo-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+.demo-brand {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.demo-brand small {
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.demo-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.demo-nav button {
+  border-color: transparent;
+  background: transparent;
+}
+
+.demo-nav button[aria-current="page"] {
+  border-color: var(--app-border);
+  background: var(--app-bg);
+  font-weight: 700;
+}
+
+.demo-switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-left: auto;
+}
+
+.demo-choice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.demo-choice select {
+  color: var(--app-fg);
+  font-size: 13px;
+}
+
+.demo-main {
+  padding: 16px;
+}
+
+/* ---------- 画面 ---------- */
+
+.demo-screen {
+  max-width: 880px;
+}
+
+.demo-screen h1 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.demo-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.demo-toolbar input {
+  flex: 1 1 220px;
+}
+
+.demo-message {
+  margin: 0 0 12px;
+  color: var(--app-muted);
+}
+
+.demo-table {
+  overflow-x: auto;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
+}
+
+.demo-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.demo-table th,
+.demo-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--app-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.demo-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.demo-table th {
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.demo-table .demo-number {
+  text-align: right;
+}
+
+.demo-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.demo-badge-out {
+  background: var(--app-out-bg);
+  color: var(--app-out);
+}
+
+.demo-badge-low {
+  background: var(--app-low-bg);
+  color: var(--app-low);
+}
+
+.demo-note {
+  margin: 12px 0 0;
+}
+
+/* HelpButton の中身を文字にした例（children と className を渡す） */
+.mhk-button.demo-help-link {
+  min-height: 0;
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  color: var(--app-accent);
+  text-decoration: underline;
+}
+
+.demo-form {
+  display: grid;
+  gap: 12px;
+  max-width: 480px;
+}
+
+.demo-form fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 16px 16px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
+}
+
+.demo-form legend {
+  padding: 0 4px;
+  font-weight: 700;
+}
+
+.demo-field {
+  display: grid;
+  gap: 4px;
+}
+
+.demo-field span {
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.demo-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.demo-form .demo-actions {
+  justify-content: flex-start;
+}
+
+.demo-primary {
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+  color: var(--app-accent-fg);
+}
+
+/* ---------- ダイアログ ---------- */
+
+/* ヘルプのドロワー（--mhk-z-index）より奥に置き、ダイアログを開いたままヘルプを操作できるようにする */
+.demo-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.35);
+}
+
+.demo-dialog {
+  width: min(400px, 100%);
+  padding: 20px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-surface);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
+}
+
+.demo-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.demo-dialog .demo-field {
+  margin: 12px 0 20px;
+}
+
+.demo-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- ヘルプの本文の中の独自タグ ---------- */
+
+/* ドロワーの中に描画されるので、ヘルプの変数（--mhk-*）で色を合わせる */
+.demo-open-screen {
+  padding: 4px 12px;
+  border: 1px solid var(--mhk-accent);
+  border-radius: var(--mhk-radius);
+  background: transparent;
+  color: var(--mhk-accent);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.demo-open-screen:hover {
+  background: var(--mhk-bg-subtle);
+}
+
+.demo-shortcut {
+  white-space: nowrap;
+}

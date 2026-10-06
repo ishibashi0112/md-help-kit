@@ -31,7 +31,7 @@ Reactアプリ向けのアプリ内ヘルプキット（npmパッケージ）。
 - テスト: `pnpm test`（監視モードは `pnpm test:watch`）
 - 型検査: `pnpm typecheck`
 - ビルド: `pnpm build`（`dist/` に出力）。型エラーがあってもビルドは止まらないので、型は `pnpm typecheck` で確認する
-- example の起動: 手順9で記入する
+- example の起動: `pnpm example`（開発サーバーのみ。`http://localhost:5173/`）。ライブラリは `src/` を直接読むので、事前のビルドは不要
 
 ## 規約
 

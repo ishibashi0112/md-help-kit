@@ -29,7 +29,8 @@
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && tsc -p example/tsconfig.json",
+    "example": "vite --config example/vite.config.ts"
   },
   "dependencies": {
     "markdown-to-jsx": "^9.10.3"

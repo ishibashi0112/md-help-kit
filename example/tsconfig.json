@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["vite/client"],
+    "paths": {
+      "md-help-kit": ["../src/core/index.ts"],
+      "md-help-kit/ui": ["../src/ui/index.ts"],
+      "md-help-kit/mermaid": ["../src/mermaid/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

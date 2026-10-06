@@ -615,7 +615,23 @@ src/
     mermaid-block.tsx
     index.ts
 example/                Vite製のデモSPA（bundled と remote を切り替えられる）
+  vite.config.ts        src/ を読むための別名、docs/ の配信、process.env.NODE_ENV の定義
+  index.html
+  src/                  デモのアプリ（受注一覧、在庫照会、設定の3画面）と、独自タグの例
+  docs/                 ヘルプのmd（本文の見本 prose-sample.md を含む）
 ```
+
+`example/` は次のように作る。
+
+- 起動は `pnpm example`（開発サーバーのみ。デモのビルドは作らない）。依存はルートの devDependencies を使う
+- ライブラリはビルドせず、`src/` を直接読む。import は利用者と同じ名前（`md-help-kit`、`md-help-kit/ui` など）で書き、Vite の別名で `src/` に向ける
+- `src/` を直接読むと `process.env.NODE_ENV` が置き換わらず、開発時の警告（11章）が出ないため、example の設定で定義する
+- `docs/` は、bundled では `import.meta.glob` でビルドに含め、remote では開発サーバーが `/help/` で配信したものを取得する（存在しないファイルは404にする）
+  - 画像は bundled でも表示できるよう、`/help/img/...` のように絶対パスで書く（4.1節）
+- 画面ごとに `useHelpPage` でページを宣言する。受注一覧の「一括更新」のダイアログは、開いている間 `orders#一括更新` を宣言する（スタックの確認）
+- ヘッダーで、取得元（bundled、remote）、文言（英語、`jaLabels`）、テーマ（OSに従う、ライト、ダーク）、ドロワーを表示する側を切り替える。テーマは `html` の `data-mhk-theme` で固定する。切り替えと表示中の画面は URL のクエリに持つ（再読み込みしても残る）
+- 独自タグの例として `<OpenScreen to="stock">`（アプリの画面を開く）と `<Shortcut keys={["Ctrl", "E"]} />` をデモの中で実装し、`codeBlocks.mermaid` に `MermaidBlock` を登録する（これらの部品は同梱しない。15章）
+- example の型も `pnpm typecheck` で確かめる
 
 `markdown-to-jsx` を直接 import してよいのは `core/markdown.ts` だけにする。
 将来レンダラを差し替える場合の影響を、このファイルに閉じ込めるため。
