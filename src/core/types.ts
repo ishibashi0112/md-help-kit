@@ -10,6 +10,60 @@ export interface HelpSource {
   resolveAsset?(pageId: string, path: string): string;
 }
 
+/** useHelp() が返すもの（5.3節） */
+export interface HelpApi {
+  /** ドロワーが開いているか */
+  isOpen: boolean;
+  /** ドロワーを開く。target を省略したときは、画面のページ、defaultPage、目次の先頭の順に選ぶ */
+  open(target?: string): void;
+  close(): void;
+  toggle(): void;
+
+  /** 目次ツリー */
+  index: HelpIndexNode[];
+  /** 目次の取得の状態。idle はまだ取得を始めていない（indexLoading が "open" のとき） */
+  indexStatus: HelpIndexStatus;
+
+  /** 表示中のページ。まだ何も開いていないときは null */
+  current: HelpCurrentPage | null;
+
+  /** 画面が宣言しているターゲット（useHelpPage） */
+  screenTarget: string | null;
+  /** ターゲット（`orders`、`orders#一括更新`）へ移動する */
+  navigate(target: string): void;
+  /** ドロワー内の履歴で1つ前に戻る */
+  back(): void;
+  canGoBack: boolean;
+  /** キャッシュを捨て、目次と表示中のページを取得し直す */
+  reload(): void;
+
+  search(query: string): Promise<HelpSearchHit[]>;
+}
+
+export type HelpIndexStatus = "idle" | "loading" | "ready" | "error";
+
+export type HelpPageStatus = "loading" | "ready" | "not-found" | "error";
+
+/** 表示中のページ */
+export interface HelpCurrentPage {
+  id: string;
+  /** 目次のタイトル。目次にないページは、本文の最初の `#` 見出し、なければページID */
+  title: string;
+  markdown: string;
+  headings: HelpHeading[];
+  /** ターゲットが見出しまで指しているときの見出しID */
+  headingId: string | null;
+  status: HelpPageStatus;
+}
+
+/** コードブロックの描画を差し替えるコンポーネントの props（6.2節） */
+export interface HelpCodeBlockProps {
+  /** コードブロックの中身 */
+  code: string;
+  /** 言語名 */
+  lang: string;
+}
+
 /** 目次ツリーの1項目。リンクのある項目はページ、リンクのない項目はグループ見出し（3.1節） */
 export type HelpIndexNode =
   | { type: "page"; id: string; title: string; children: HelpIndexNode[] }

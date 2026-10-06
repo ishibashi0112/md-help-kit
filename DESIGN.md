@@ -201,8 +201,9 @@ const source2 = remote("https://files.example.co.jp/app-help", {
 
 | prop | 型 | 説明 |
 |---|---|---|
-| `source` | `HelpSource` | 必須 |
-| `defaultPage` | `string` | 画面に紐付くページがないときに開くページ。省略時は目次の先頭 |
+| `source` | `HelpSource` | 必須。変わったらキャッシュと履歴を捨て、目次と表示中のページを取得し直す（画面の宣言と開閉は引き継ぐ）。レンダーのたびに作り直さないこと |
+| `defaultPage` | `string` | 画面に紐付くページがないときに開くページ。省略時は目次の先頭（深さ優先でたどった最初のページ） |
+| `indexLoading` | `"mount" \| "open"` | 目次を取得する時期。`"mount"`（既定）は HelpProvider のマウント時、`"open"` は最初に `open`、`toggle`、`navigate`、`search` のいずれかを使ったとき。マウント後の変更は反映しない |
 | `components` | `Record<string, ComponentType<any>>` | md内で使える独自タグ（6.1） |
 | `codeBlocks` | `Record<string, ComponentType<HelpCodeBlockProps>>` | 言語名ごとのコードブロック描画（6.2） |
 | `allowedTags` | `string[]` | md内で使えるHTMLタグの追加（7章） |
@@ -219,7 +220,10 @@ useHelpPage(isAdmin ? "settings" : null); // null は宣言なし
 
 - マウント時に登録、アンマウント時に解除する
 - 複数のコンポーネントが宣言した場合、最後にマウントされたものが有効（スタックで管理し、解除されたら1つ前に戻る）
-- ドロワーが開いている間に画面のページが変わったら、表示も追従する
+  - 同時にマウントされた親子では、子の宣言を優先する。React の effect は子から実行されるため、マウントの順ではなくレンダーの順で判定する（兄弟では後にあるものが優先）
+  - 宣言中にターゲットが変わっても、スタック上の位置は変えない
+- ドロワーが開いている間に画面のページが変わったら、表示も追従する（直前のページは履歴に積む）。画面のターゲットが null になったときは、表示を変えない
+- `useHelp` と `useHelpPage` を HelpProvider の外で使ったら、エラーを投げる
 
 ### 5.3 `useHelp()`
 
@@ -231,13 +235,14 @@ interface HelpApi {
   toggle(): void;
 
   index: HelpIndexNode[];        // 目次ツリー
-  indexStatus: "loading" | "ready" | "error";
+  indexStatus: "idle" | "loading" | "ready" | "error";  // idle はまだ取得を始めていない（indexLoading: "open"）
 
   current: {
     id: string;
     title: string;
     markdown: string;
     headings: HelpHeading[];     // { depth, text, id }
+    headingId: string | null;    // ターゲットが見出しまで指しているときの見出しID
     status: "loading" | "ready" | "not-found" | "error";
   } | null;
 
@@ -245,7 +250,7 @@ interface HelpApi {
   navigate(target: string): void;
   back(): void;
   canGoBack: boolean;
-  reload(): void;                // 現在のページを取得し直す
+  reload(): void;                // キャッシュを捨て、目次と現在のページを取得し直す
 
   search(query: string): Promise<HelpSearchHit[]>;
 }
@@ -264,7 +269,12 @@ interface HelpSearchHit {
 ```
 
 - 取得したページはメモリにキャッシュする（`reload()` で破棄）
+  - `reload()` は、ページと検索用の前処理のキャッシュをすべて捨て、目次と現在のページを取得し直す（目次の取得失敗の再試行にも使う）
 - 履歴（`back`）はドロワー内だけの簡易スタック。ブラウザの履歴には触れない
+  - 別のページに移るとき（`navigate`、画面への追従、`open`）は、直前のページを積む。閉じても履歴は残す
+  - 同じページ内の見出しへの移動は、取得し直さず（スクロールだけ）、履歴にも積まない
+- `open()` で開くページは、引数、画面のページ、`defaultPage`、目次の先頭の順に選ぶ。目次の先頭に決まったときに目次がまだなければ、取得を待って開く。どれも決まらないときは `current` を変えない（一度も開いていなければ null）
+- `navigate("#見出し")` のようにページIDが空のターゲットは、現在のページの見出しとして扱う
 
 ### 5.4 `HelpContent`
 
@@ -399,6 +409,8 @@ VS CodeやGitHubのプレビューでも注意書きとして表示されるた�
 ## 8. 検索（v0.1）
 
 - 初回の検索時に、目次に載っている全ページを取得する（以後はキャッシュ）
+  - 並行して取得する。取得に失敗したページは結果から除き、次の検索で取得し直す
+  - 目次が取得できていなければ、そのエラーで reject する
 - 検索語と本文の両方を NFKC 正規化し、小文字化してから部分一致で探す（全角と半角の違いを吸収）
   - 半角カナの濁点なども1文字として照合する（`ｶﾞ` と `ガ`）
 - 空白区切りの複数語は AND 条件。1つの見出し区間（見出しの文字とその本文）にすべての語があるときに一致とする
@@ -503,7 +515,8 @@ Vitest と Testing Library を使う。
 文言は英語で、先頭に `[md-help-kit]` を付ける（エラーの文言も英語）。
 `process` がない環境（利用者のバンドラが `process.env.NODE_ENV` を置き換えない場合）では出さない。
 
-- `useHelpPage` や `navigate` に、存在しないページIDが渡された
+- `useHelpPage` や `navigate` に、存在しないページIDが渡された（ページの取得が HelpNotFoundError になったときに出す。宣言だけでは取得しない）
+- ページを開いていないときに、ページIDのないターゲット（`#見出し`）で移動しようとした
 - 表示中のページに、存在しないページへのリンクがある
 - 見出しIDが見つからない
 - `_index.md` に解釈できない項目がある
